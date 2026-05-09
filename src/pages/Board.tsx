@@ -261,8 +261,13 @@ export const Board: React.FC = () => {
         borderRadius: '4px', border: (isMoving || isAttacking || isMenu) ? '2px solid var(--primary)' : (isMine ? '1px solid rgba(255,255,255,0.3)' : 'none'), zIndex: (isMoving || isAttacking || isMenu) ? 5 : 1
       }}>
         {role === 'admin' && (
-          <button onClick={(e) => { e.stopPropagation(); supabase.from('board_entities').delete().eq('id', entity.id); }}
-            style={{ position: 'absolute', top: '2px', right: '2px', background: 'rgba(0,0,0,0.5)', border: 'none', borderRadius: '50%', color: 'white', width: '14px', height: '14px', fontSize: '10px', cursor: 'pointer', zIndex: 10, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <button onClick={(e) => { e.stopPropagation(); removeEntity(entity.id); }}
+            style={{ 
+              position: 'absolute', top: '-4px', right: '-4px', background: '#ff4444', border: '2px solid white', 
+              borderRadius: '50%', color: 'white', width: '22px', height: '22px', fontSize: '14px', 
+              cursor: 'pointer', zIndex: 10, display: 'flex', alignItems: 'center', justifyContent: 'center',
+              boxShadow: '0 2px 4px rgba(0,0,0,0.3)', fontWeight: 'bold' 
+            }}>
             ×
           </button>
         )}
