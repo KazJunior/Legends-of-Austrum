@@ -2,12 +2,11 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
-import { Shield, Sword, Dices, Plus, Minus, Trash2, Eraser, X, Zap } from 'lucide-react';
+import { Dices, Plus, Minus, Trash2, Eraser, X, Zap } from 'lucide-react';
 
 export const CharacterView: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { session } = useAuth();
   
   const [character, setCharacter] = useState<any>(null);
   const [attributes, setAttributes] = useState<any>(null);

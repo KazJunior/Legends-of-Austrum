@@ -1,12 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
-import { Package, Search, Plus, Trash2, X } from 'lucide-react';
+import { Search, Plus, Trash2, X } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 export const GlobalInventory: React.FC = () => {
-  const { role } = useAuth();
   const [items, setItems] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [showAddModal, setShowAddModal] = useState(false);
   const [formData, setFormData] = useState({
@@ -34,13 +32,11 @@ export const GlobalInventory: React.FC = () => {
   }, []);
 
   const fetchItems = async () => {
-    setLoading(true);
-    const { data, error } = await supabase
+    const { data } = await supabase
       .from('global_items')
       .select('*')
       .order('name');
     if (data) setItems(data);
-    setLoading(false);
   };
 
   const handleCreate = async (e: React.FormEvent) => {

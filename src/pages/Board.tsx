@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
-import { Users, BookOpen, Trash2, Plus, Ghost, User, Mountain, Move, Sword, Zap, Dice5, Target, ShieldCheck } from 'lucide-react';
+import { Sword, ShieldCheck } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 interface BoardEntity {
@@ -35,13 +35,12 @@ interface Skill {
 }
 
 export const Board: React.FC = () => {
-  const { role, session } = useAuth();
-  const currentUserId = session?.user?.id;
+  const { role, user } = useAuth();
+  const currentUserId = user?.id;
   
-  const [entities, setEntities] = useState<BoardEntity[]>([]);
   const [characters, setCharacters] = useState<any[]>([]);
   const [monsters, setMonsters] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [entities, setEntities] = useState<BoardEntity[]>([]);
   const [selectedEntity, setSelectedEntity] = useState<{type: string, id: string, name: string, data: any} | null>(null);
   
   const [actionMenuEntity, setActionMenuEntity] = useState<BoardEntity | null>(null);
@@ -74,9 +73,7 @@ export const Board: React.FC = () => {
   }, []);
 
   const fetchData = async () => {
-    setLoading(true);
     await Promise.all([fetchEntities(), fetchCharacters(), fetchMonsters()]);
-    setLoading(false);
   };
 
   const fetchEntities = async () => {

@@ -24,7 +24,7 @@ export const Dashboard: React.FC = () => {
 
   const fetchCharacters = async () => {
     if (!session?.user) return;
-    const { data, error } = await supabase
+    const { data } = await supabase
       .from('characters')
       .select('*')
       .eq('user_id', session.user.id);
