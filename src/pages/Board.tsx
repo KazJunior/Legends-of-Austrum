@@ -183,6 +183,15 @@ export const Board: React.FC = () => {
     setSelectedEntity(null);
   };
 
+  const removeEntity = async (entityId: string) => {
+    if (role !== 'admin') return;
+    const { error } = await supabase.from('board_entities').delete().eq('id', entityId);
+    if (!error) {
+      setEntities(prev => prev.filter(e => e.id !== entityId));
+      setActionMenuEntity(null);
+    }
+  };
+
   const executeAttack = async (target: BoardEntity) => {
     if (!selectedSkill) return;
     const { total, rolls } = rollDice(selectedSkill.dice_quantity || 1, selectedSkill.dice_type || 'd6');
@@ -318,6 +327,9 @@ export const Board: React.FC = () => {
                 <button className="btn btn-primary" onClick={() => { setMovingEntity(actionMenuEntity); setActionMenuEntity(null); }}>Movimentar</button>
                 <button className="btn" style={{ background: 'var(--health-bg)' }} onClick={() => { setAttackingEntity(actionMenuEntity); setActionMenuEntity(null); }}>Atacar</button>
               </div>
+              {role === 'admin' && (
+                <button className="btn" style={{ background: '#ff4444', marginTop: '1rem', width: '100%' }} onClick={() => removeEntity(actionMenuEntity.id)}>Remover do Tabuleiro</button>
+              )}
               <button className="btn btn-secondary" style={{ marginTop: '1rem', width: '100%' }} onClick={() => setActionMenuEntity(null)}>Cancelar</button>
             </div>
           )}
