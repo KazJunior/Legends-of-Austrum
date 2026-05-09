@@ -11,8 +11,10 @@ export const GlobalInventory: React.FC = () => {
   const [showAddModal, setShowAddModal] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
-    type: 'arma',
+    type: 'Item',
     description: '',
+    quantity: 1,
+    is_equipment: false,
     bonus_hp: 0,
     bonus_str: 0,
     bonus_aur: 0,
@@ -43,20 +45,31 @@ export const GlobalInventory: React.FC = () => {
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
+    const { is_equipment, ...rest } = formData;
+    const dataToInsert = is_equipment ? rest : { name: rest.name, type: rest.type, quantity: rest.quantity, description: rest.description };
+    
     const { error } = await supabase
       .from('global_items')
-      .insert(formData);
+      .insert(dataToInsert);
     
     if (error) {
       alert('Erro ao criar item: ' + error.message);
     } else {
       setShowAddModal(false);
       setFormData({
-        name: '', type: 'arma', description: '',
+        name: '', type: 'Item', description: '', quantity: 1, is_equipment: false,
         bonus_hp: 0, bonus_str: 0, bonus_aur: 0, bonus_int: 0, bonus_dex: 0, bonus_aus: 0, bonus_def: 0, bonus_res: 0, bonus_fame: 0
       });
       fetchItems();
     }
+  };
+
+  const updateQuantity = async (id: string, delta: number) => {
+    const item = items.find(i => i.id === id);
+    if (!item) return;
+    const newQty = Math.max(0, (item.quantity || 0) + delta);
+    setItems(items.map(i => i.id === id ? { ...i, quantity: newQty } : i));
+    await supabase.from('global_items').update({ quantity: newQty }).eq('id', id);
   };
 
   const handleDelete = async (id: string) => {
@@ -72,7 +85,7 @@ export const GlobalInventory: React.FC = () => {
 
   return (
     <div className="container">
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }} className="flex-mobile-column">
         <div>
           <h1 className="title-glow">Inventário Global</h1>
           <p style={{ color: 'var(--text-muted)' }}>Catálogo de itens e equipamentos do mundo de Austrum.</p>
@@ -99,7 +112,7 @@ export const GlobalInventory: React.FC = () => {
       {loading ? (
         <p>Carregando catálogo...</p>
       ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1.5rem' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1.5rem' }} className="grid-mobile-1">
           {filteredItems.map(item => (
             <div key={item.id} className="glass-panel" style={{ position: 'relative' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.5rem' }}>
@@ -112,6 +125,14 @@ export const GlobalInventory: React.FC = () => {
                 {item.type}
               </div>
               <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', marginBottom: '1rem' }}>{item.description}</p>
+              
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem', background: 'rgba(0,0,0,0.2)', padding: '0.5rem', borderRadius: '8px' }}>
+                <span style={{ fontSize: '0.875rem', fontWeight: 'bold' }}>Qtd: {item.quantity || 0}</span>
+                <div style={{ display: 'flex', gap: '0.25rem' }}>
+                  <button className="btn btn-secondary" style={{ padding: '0.1rem 0.4rem', minWidth: 'auto' }} onClick={() => updateQuantity(item.id, -1)}>-</button>
+                  <button className="btn btn-secondary" style={{ padding: '0.1rem 0.4rem', minWidth: 'auto' }} onClick={() => updateQuantity(item.id, 1)}>+</button>
+                </div>
+              </div>
               
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
                 {statsList.map(stat => {
@@ -142,36 +163,58 @@ export const GlobalInventory: React.FC = () => {
               <button onClick={() => setShowAddModal(false)} style={{ background: 'transparent', border: 'none', color: 'white', cursor: 'pointer' }}><X /></button>
             </div>
             <form onSubmit={handleCreate}>
+              <div className="input-group" style={{ marginBottom: '1.5rem' }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+                  <input type="checkbox" checked={formData.is_equipment} onChange={e => setFormData({...formData, is_equipment: e.target.checked})} />
+                  Este item é um Equipamento (concede bônus)
+                </label>
+              </div>
+
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                 <div className="input-group">
                   <label>Nome do Item</label>
                   <input type="text" className="input" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} required />
                 </div>
                 <div className="input-group">
-                  <label>Tipo</label>
-                  <select className="input" value={formData.type} onChange={e => setFormData({...formData, type: e.target.value})}>
-                    <option value="capacete">Capacete</option>
-                    <option value="peitoral">Peitoral</option>
-                    <option value="perneta">Perneta</option>
-                    <option value="bota">Bota</option>
-                    <option value="arma">Arma</option>
-                    <option value="acessorio">Acessório</option>
-                  </select>
+                  <label>Tipo / Categoria</label>
+                  {formData.is_equipment ? (
+                    <select className="input" value={formData.type} onChange={e => setFormData({...formData, type: e.target.value})}>
+                      <option value="capacete">Capacete</option>
+                      <option value="peitoral">Peitoral</option>
+                      <option value="perneta">Perneta</option>
+                      <option value="bota">Bota</option>
+                      <option value="arma">Arma</option>
+                      <option value="acessorio">Acessório</option>
+                    </select>
+                  ) : (
+                    <input type="text" className="input" placeholder="Ex: Consumível, Material..." value={formData.type} onChange={e => setFormData({...formData, type: e.target.value})} required />
+                  )}
                 </div>
               </div>
+
+              <div className="input-group">
+                <label>Quantidade Inicial</label>
+                <input type="number" className="input" value={formData.quantity} onChange={e => setFormData({...formData, quantity: Number(e.target.value)})} min="1" required />
+              </div>
+
               <div className="input-group">
                 <label>Descrição</label>
                 <textarea className="input" value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} />
               </div>
-              <h4 style={{ marginBottom: '1rem', color: 'var(--accent)' }}>Bônus de Atributos</h4>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1rem' }}>
-                {statsList.map(stat => (
-                  <div className="input-group" key={stat}>
-                    <label style={{ textTransform: 'uppercase', fontSize: '0.75rem' }}>{stat}</label>
-                    <input type="number" className="input" value={formData[`bonus_${stat}` as keyof typeof formData]} onChange={e => setFormData({...formData, [`bonus_${stat}`]: Number(e.target.value)})} />
+
+              {formData.is_equipment && (
+                <>
+                  <h4 style={{ marginBottom: '1rem', color: 'var(--accent)' }}>Bônus de Atributos</h4>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1rem' }}>
+                    {statsList.map(stat => (
+                      <div className="input-group" key={stat}>
+                        <label style={{ textTransform: 'uppercase', fontSize: '0.75rem' }}>{stat}</label>
+                        <input type="number" className="input" value={formData[`bonus_${stat}` as keyof typeof formData]} onChange={e => setFormData({...formData, [`bonus_${stat}`]: Number(e.target.value)})} />
+                      </div>
+                    ))}
                   </div>
-                ))}
-              </div>
+                </>
+              )}
               <button type="submit" className="btn btn-primary" style={{ width: '100%', marginTop: '1.5rem' }}>Salvar no Catálogo</button>
             </form>
           </div>

@@ -205,6 +205,54 @@ export const CharacterView: React.FC = () => {
     fetchCharacterData();
   };
 
+  const calculateMaxXp = (level: number) => {
+    return 100 + (Math.floor((level - 1) / 10) * 100);
+  };
+
+  const updateMasteryXp = async (mastery: any, delta: number) => {
+    let newXp = (mastery.xp || 0) + delta;
+    let newLevel = mastery.level || 1;
+
+    while (newXp >= calculateMaxXp(newLevel)) {
+      newXp -= calculateMaxXp(newLevel);
+      newLevel += 1;
+    }
+
+    if (newXp < 0) {
+      if (newLevel > 1) {
+        newLevel -= 1;
+        newXp += calculateMaxXp(newLevel);
+      } else {
+        newXp = 0;
+      }
+    }
+
+    const updatedMasteries = masteries.map(m => 
+      m.id === mastery.id ? { ...m, xp: newXp, level: newLevel } : m
+    );
+    setMasteries(updatedMasteries);
+    await supabase.from('masteries').update({ xp: newXp, level: newLevel }).eq('id', mastery.id);
+  };
+
+  const handleMasteryXpInput = async (mastery: any, value: string) => {
+    const val = parseInt(value, 10);
+    if (isNaN(val)) return;
+    
+    let newXp = val;
+    let newLevel = mastery.level || 1;
+
+    while (newXp >= calculateMaxXp(newLevel)) {
+      newXp -= calculateMaxXp(newLevel);
+      newLevel += 1;
+    }
+
+    const updatedMasteries = masteries.map(m => 
+      m.id === mastery.id ? { ...m, xp: newXp, level: newLevel } : m
+    );
+    setMasteries(updatedMasteries);
+    await supabase.from('masteries').update({ xp: newXp, level: newLevel }).eq('id', mastery.id);
+  };
+
   const handleDeleteMastery = async (masteryId: string) => {
     await supabase.from('masteries').delete().eq('id', masteryId);
     setDeleteTarget(null);
@@ -238,12 +286,12 @@ export const CharacterView: React.FC = () => {
 
   return (
     <div className="container">
-      <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '2rem' }}>
+      <div className="responsive-grid">
         
         {/* Left Column */}
         <div>
           {/* Header */}
-          <div className="glass-panel" style={{ marginBottom: '2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', position: 'relative', overflow: 'hidden' }}>
+          <div className="glass-panel flex-mobile-column" style={{ marginBottom: '2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', position: 'relative', overflow: 'hidden' }}>
             <div>
               <h1 className="title-glow" style={{ fontSize: '2.5rem', marginBottom: '0.5rem' }}>{character.name}</h1>
               <div style={{ display: 'flex', gap: '1rem', color: 'var(--text-muted)' }}>
@@ -252,9 +300,11 @@ export const CharacterView: React.FC = () => {
                 {character.title && <span>Título: {character.title}</span>}
               </div>
             </div>
-            <button onClick={() => setShowDeleteConfirm(true)} className="btn btn-secondary" style={{ color: '#ff4444', zIndex: 10 }} title="Deletar Personagem">
-              <Trash2 size={20} style={{ pointerEvents: 'none' }} />
-            </button>
+            <div style={{ display: 'flex', gap: '1rem' }} className="grid-mobile-1">
+              <button onClick={() => setShowDeleteConfirm(true)} className="btn btn-secondary" style={{ color: '#ff4444', zIndex: 10 }} title="Deletar Personagem">
+                <Trash2 size={20} style={{ pointerEvents: 'none' }} />
+              </button>
+            </div>
 
             {showDeleteConfirm && (
               <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.95)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', zIndex: 20, padding: '1rem', textAlign: 'center', animation: 'fadeIn 0.2s ease' }}>
@@ -271,26 +321,30 @@ export const CharacterView: React.FC = () => {
           <div className="glass-panel" style={{ marginBottom: '2rem' }}>
             <h3 style={{ marginBottom: '1rem' }}>Status Vital</h3>
             
-            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1rem' }} className="flex-mobile-column">
               <div style={{ width: '80px', fontWeight: 'bold', color: 'var(--health-bg)' }}>HP</div>
               <div className="status-bar-container">
                 <div className="status-bar-fill health-fill" style={{ width: `${hpPercent}%` }}></div>
                 <div className="status-bar-text">{character.current_hp} / {maxHp}</div>
               </div>
-              <button className="btn btn-secondary" style={{ padding: '0.25rem 0.5rem' }} onClick={() => updateHpMana('hp', -1)}><Minus size={16} /></button>
-              <button className="btn btn-secondary" style={{ padding: '0.25rem 0.5rem' }} onClick={() => updateHpMana('hp', 1)}><Plus size={16} /></button>
-              <button className="btn btn-primary" style={{ padding: '0.25rem 0.5rem', background: 'var(--health-bg)', border: 'none' }} onClick={() => maximizeStatus('hp')} title="Maximizar HP"><Zap size={16} /></button>
+              <div style={{ display: 'flex', gap: '0.5rem' }} className="grid-mobile-1">
+                <button className="btn btn-secondary" style={{ padding: '0.25rem 0.5rem' }} onClick={() => updateHpMana('hp', -1)}><Minus size={16} /></button>
+                <button className="btn btn-secondary" style={{ padding: '0.25rem 0.5rem' }} onClick={() => updateHpMana('hp', 1)}><Plus size={16} /></button>
+                <button className="btn btn-primary" style={{ padding: '0.25rem 0.5rem', background: 'var(--health-bg)', border: 'none' }} onClick={() => maximizeStatus('hp')} title="Maximizar HP"><Zap size={16} /></button>
+              </div>
             </div>
 
-            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }} className="flex-mobile-column">
               <div style={{ width: '80px', fontWeight: 'bold', color: 'var(--mana-bg)' }}>MANA</div>
               <div className="status-bar-container">
                 <div className="status-bar-fill mana-fill" style={{ width: `${manaPercent}%` }}></div>
                 <div className="status-bar-text">{character.current_mana} / {maxMana}</div>
               </div>
-              <button className="btn btn-secondary" style={{ padding: '0.25rem 0.5rem' }} onClick={() => updateHpMana('mana', -1)}><Minus size={16} /></button>
-              <button className="btn btn-secondary" style={{ padding: '0.25rem 0.5rem' }} onClick={() => updateHpMana('mana', 1)}><Plus size={16} /></button>
-              <button className="btn btn-primary" style={{ padding: '0.25rem 0.5rem', background: 'var(--mana-bg)', border: 'none' }} onClick={() => maximizeStatus('mana')} title="Maximizar Mana"><Zap size={16} /></button>
+              <div style={{ display: 'flex', gap: '0.5rem' }} className="grid-mobile-1">
+                <button className="btn btn-secondary" style={{ padding: '0.25rem 0.5rem' }} onClick={() => updateHpMana('mana', -1)}><Minus size={16} /></button>
+                <button className="btn btn-secondary" style={{ padding: '0.25rem 0.5rem' }} onClick={() => updateHpMana('mana', 1)}><Plus size={16} /></button>
+                <button className="btn btn-primary" style={{ padding: '0.25rem 0.5rem', background: 'var(--mana-bg)', border: 'none' }} onClick={() => maximizeStatus('mana')} title="Maximizar Mana"><Zap size={16} /></button>
+              </div>
             </div>
           </div>
 
@@ -350,17 +404,48 @@ export const CharacterView: React.FC = () => {
               <p style={{ color: 'var(--text-muted)' }}>Nenhuma maestria.</p>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                {masteries.map(m => (
-                  <div key={m.id} style={{ padding: '0.5rem', background: 'rgba(0,0,0,0.2)', borderRadius: '8px' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                      <div style={{ fontWeight: 'bold', color: 'var(--accent)' }}>{m.name}</div>
-                      <button onClick={() => setDeleteTarget({ id: m.id, type: 'mastery', name: m.name })} style={{ background: 'transparent', border: 'none', color: '#ff4444', cursor: 'pointer' }}>
-                        <Trash2 size={14} style={{ pointerEvents: 'none' }} />
-                      </button>
+                {masteries.map(m => {
+                  const maxXp = calculateMaxXp(m.level || 1);
+                  const xpPercent = Math.min(100, ((m.xp || 0) / maxXp) * 100);
+                  
+                  return (
+                    <div key={m.id} style={{ padding: '0.75rem', background: 'rgba(0,0,0,0.2)', borderRadius: '8px', border: '1px solid var(--border-subtle)' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.5rem' }}>
+                        <div>
+                          <div style={{ fontWeight: 'bold', color: 'var(--accent)', fontSize: '1.1rem' }}>{m.name}</div>
+                          <div style={{ fontSize: '0.875rem', color: 'var(--secondary)', fontWeight: 'bold' }}>Nível {m.level || 1}</div>
+                        </div>
+                        <button onClick={() => setDeleteTarget({ id: m.id, type: 'mastery', name: m.name })} style={{ background: 'transparent', border: 'none', color: '#ff4444', cursor: 'pointer', padding: '0.25rem' }}>
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
+                      
+                      <div style={{ marginBottom: '0.5rem' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', marginBottom: '0.25rem' }}>
+                          <span>Progresso</span>
+                          <span>{m.xp || 0} / {maxXp} XP</span>
+                        </div>
+                        <div className="status-bar-container" style={{ height: '8px' }}>
+                          <div className="status-bar-fill" style={{ width: `${xpPercent}%`, background: 'var(--secondary)' }}></div>
+                        </div>
+                      </div>
+
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <button className="btn btn-secondary" style={{ padding: '0.1rem 0.4rem', height: 'auto' }} onClick={() => updateMasteryXp(m, -10)} title="-10 XP"><Minus size={12} /></button>
+                        <input 
+                          type="number" 
+                          className="input" 
+                          style={{ padding: '0.2rem', fontSize: '0.875rem', textAlign: 'center', width: '70px' }} 
+                          value={m.xp || 0} 
+                          onChange={(e) => handleMasteryXpInput(m, e.target.value)}
+                        />
+                        <button className="btn btn-secondary" style={{ padding: '0.1rem 0.4rem', height: 'auto' }} onClick={() => updateMasteryXp(m, 10)} title="+10 XP"><Plus size={12} /></button>
+                      </div>
+
+                      {m.description && <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.5rem', fontStyle: 'italic' }}>{m.description}</div>}
                     </div>
-                    {m.description && <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{m.description}</div>}
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>
@@ -561,16 +646,14 @@ export const CharacterView: React.FC = () => {
                     <input type="number" className="input" value={skillForm.dice_quantity} onChange={e => setSkillForm({...skillForm, dice_quantity: Number(e.target.value)})} />
                   </div>
                   <div className="input-group">
-                    <label>Tipo Dado</label>
-                    <select className="input" value={skillForm.dice_type} onChange={e => setSkillForm({...skillForm, dice_type: e.target.value})}>
-                      <option value="d4">d4</option>
-                      <option value="d6">d6</option>
-                      <option value="d8">d8</option>
-                      <option value="d10">d10</option>
-                      <option value="d12">d12</option>
-                      <option value="d20">d20</option>
-                      <option value="d100">d100</option>
-                    </select>
+                    <label>Tipo Dado (Ex: d20, d3)</label>
+                    <input 
+                      type="text" 
+                      className="input" 
+                      value={skillForm.dice_type} 
+                      onChange={e => setSkillForm({...skillForm, dice_type: e.target.value.toLowerCase()})} 
+                      placeholder="d6"
+                    />
                   </div>
                   <div className="input-group">
                     <label>Atributo Base</label>

@@ -9,6 +9,7 @@ import { CharacterCreate } from './pages/CharacterCreate';
 import { CharacterView } from './pages/CharacterView';
 import { MonstersList } from './pages/MonstersList';
 import { GlobalInventory } from './pages/GlobalInventory';
+import { Board } from './pages/Board';
 
 class ErrorBoundary extends React.Component<{children: React.ReactNode}, {error: any}> {
   constructor(props: any) {
@@ -42,6 +43,7 @@ function App() {
               <Route path="/monsters/view" element={<MonstersList />} />
               <Route path="/monsters" element={<MonstersList />} />
               <Route path="/inventory" element={<GlobalInventory />} />
+              <Route path="/board" element={<Board />} />
             </Route>
             
             <Route path="*" element={<Navigate to="/" replace />} />

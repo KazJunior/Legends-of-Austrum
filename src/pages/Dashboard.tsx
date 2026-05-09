@@ -48,7 +48,7 @@ export const Dashboard: React.FC = () => {
 
   return (
     <div className="container">
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }} className="flex-mobile-column">
         <h1 className="title-glow">Meus Personagens</h1>
         <Link to="/characters/new" className="btn btn-primary" style={{ textDecoration: 'none' }}>
           <Plus size={20} /> Novo Personagem
@@ -64,7 +64,7 @@ export const Dashboard: React.FC = () => {
           <p style={{ color: 'var(--text-muted)' }}>Crie seu primeiro aventureiro para começar a jornada em Austrum.</p>
         </div>
       ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1.5rem' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1.5rem' }} className="grid-mobile-1">
           {characters.map(char => (
             <div key={char.id} className="glass-panel animate-fade-in" style={{ cursor: 'pointer', transition: 'transform 0.2s', border: '1px solid var(--border-subtle)', position: 'relative', overflow: 'hidden' }}
                  onMouseOver={e => e.currentTarget.style.borderColor = 'var(--primary)'}

@@ -284,15 +284,13 @@ export const MonstersList: React.FC = () => {
                         {statsList.map(s => <option key={s} value={s}>{s.toUpperCase()}</option>)}
                       </select>
                       <input type="number" placeholder="Qtd Dados" className="input" value={skillForm.dice_quantity} onChange={e => setSkillForm({...skillForm, dice_quantity: Number(e.target.value)})} required />
-                      <select className="input" value={skillForm.dice_type} onChange={e => setSkillForm({...skillForm, dice_type: e.target.value})}>
-                        <option value="d4">d4</option>
-                        <option value="d6">d6</option>
-                        <option value="d8">d8</option>
-                        <option value="d10">d10</option>
-                        <option value="d12">d12</option>
-                        <option value="d20">d20</option>
-                        <option value="d100">d100</option>
-                      </select>
+                      <input 
+                        type="text" 
+                        placeholder="Tipo Dado (Ex: d20)" 
+                        className="input" 
+                        value={skillForm.dice_type} 
+                        onChange={e => setSkillForm({...skillForm, dice_type: e.target.value.toLowerCase()})} 
+                      />
                     </div>
                     <button type="submit" className="btn btn-primary" style={{ width: '100%', marginTop: '1rem' }}>Adicionar</button>
                   </form>
