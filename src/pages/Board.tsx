@@ -70,7 +70,7 @@ export const Board: React.FC = () => {
       .subscribe();
 
     return () => { supabase.removeChannel(subscription); };
-  }, []);
+  }, [role]);
 
   const fetchData = async () => {
     await Promise.all([fetchEntities(), fetchCharacters(), fetchMonsters()]);
