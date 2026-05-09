@@ -145,7 +145,6 @@ export const GlobalInventory: React.FC = () => {
             </div>
           )}
         </div>
-      )}
 
       {showAddModal && (
         <div className="modal-overlay">
