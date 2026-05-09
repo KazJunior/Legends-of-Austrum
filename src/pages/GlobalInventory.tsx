@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { Search, Plus, Trash2, X } from 'lucide-react';
-import { useAuth } from '../context/AuthContext';
 
 export const GlobalInventory: React.FC = () => {
   const [items, setItems] = useState<any[]>([]);
@@ -105,10 +104,7 @@ export const GlobalInventory: React.FC = () => {
         </div>
       </div>
 
-      {loading ? (
-        <p>Carregando catálogo...</p>
-      ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1.5rem' }} className="grid-mobile-1">
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1.5rem' }} className="grid-mobile-1">
           {filteredItems.map(item => (
             <div key={item.id} className="glass-panel" style={{ position: 'relative' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.5rem' }}>
@@ -205,7 +201,7 @@ export const GlobalInventory: React.FC = () => {
                     {statsList.map(stat => (
                       <div className="input-group" key={stat}>
                         <label style={{ textTransform: 'uppercase', fontSize: '0.75rem' }}>{stat}</label>
-                        <input type="number" className="input" value={formData[`bonus_${stat}` as keyof typeof formData]} onChange={e => setFormData({...formData, [`bonus_${stat}`]: Number(e.target.value)})} />
+                        <input type="number" className="input" value={formData[`bonus_${stat}` as keyof typeof formData] as number} onChange={e => setFormData({...formData, [`bonus_${stat}`]: Number(e.target.value)})} />
                       </div>
                     ))}
                   </div>

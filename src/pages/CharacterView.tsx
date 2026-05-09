@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
-import { useAuth } from '../context/AuthContext';
 import { Dices, Plus, Minus, Trash2, Eraser, X, Zap } from 'lucide-react';
 
 export const CharacterView: React.FC = () => {
