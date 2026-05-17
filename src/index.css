@@ -28,6 +28,10 @@
   --glass-blur: blur(12px);
   --glass-border: 1px solid rgba(255, 255, 255, 0.08);
   --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+
+  /* Board Config */
+  --cell-size: 60px;
+  --header-size: 40px;
 }
 
 * {
@@ -401,6 +405,32 @@ h1, h2, h3, h4, h5, h6 {
   .board-cell:hover {
     background: rgba(147, 51, 234, 0.2) !important;
     border-color: var(--primary) !important;
+  }
+
+  .board-grid-container {
+    --cell-size: 45px;
+    --header-size: 30px;
+  }
+
+  .board-layout {
+    grid-template-columns: 1fr !important;
+  }
+
+  .board-header {
+    flex-direction: column;
+    align-items: flex-start !important;
+    gap: 1rem;
+  }
+
+  .board-controls {
+    width: 100%;
+    order: -1; /* Coloca os controles (Mestre/Status) antes do tabuleiro no mobile se necessário */
+  }
+
+  .action-menu-popup {
+    width: 90% !important;
+    max-width: 400px;
+    padding: 1.25rem !important;
   }
 }
 

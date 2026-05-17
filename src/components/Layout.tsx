@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Outlet, Navigate, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Sword, LogOut, User as UserIcon, Users, BookOpen, Package, Menu, X } from 'lucide-react';
+import { Sword, LogOut, User as UserIcon, Users, BookOpen, Package, Menu, X, Map } from 'lucide-react';
 
 export const Layout: React.FC = () => {
   const { session, role, loading, signOut } = useAuth();
@@ -60,6 +60,10 @@ export const Layout: React.FC = () => {
           <Link to="/board" onClick={closeSidebar} className={`btn ${isActive('/board') ? 'btn-primary' : 'btn-secondary'}`} style={{ justifyContent: 'flex-start', border: 'none', background: isActive('/board') ? '' : 'transparent' }}>
             <Sword size={18} />
             Tabuleiro
+          </Link>
+          <Link to="/maps" onClick={closeSidebar} className={`btn ${isActive('/maps') ? 'btn-primary' : 'btn-secondary'}`} style={{ justifyContent: 'flex-start', border: 'none', background: isActive('/maps') ? '' : 'transparent' }}>
+            <Map size={18} />
+            Mapas
           </Link>
           {role === 'admin' && (
             <Link to="/monsters" onClick={closeSidebar} className={`btn ${isActive('/monsters') ? 'btn-primary' : 'btn-secondary'}`} style={{ justifyContent: 'flex-start', border: 'none', background: isActive('/monsters') ? '' : 'transparent', color: 'var(--accent)' }}>

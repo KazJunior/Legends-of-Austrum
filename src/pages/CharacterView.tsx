@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
-import { Dices, Plus, Minus, Trash2, Eraser, X, Zap } from 'lucide-react';
+import { Dices, Plus, Minus, Trash2, Eraser, X, Zap, Menu, Info } from 'lucide-react';
 
 export const CharacterView: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -21,7 +21,7 @@ export const CharacterView: React.FC = () => {
 
   // Form states
   const [itemForm, setItemForm] = useState({
-    name: '', type: 'arma', quantity: 1, bonus_hp: 0, bonus_str: 0, bonus_aur: 0, bonus_int: 0, bonus_dex: 0, bonus_aus: 0, bonus_def: 0, bonus_res: 0, bonus_fame: 0
+    name: '', type: 'arma', quantity: 1, description: '', bonus_hp: 0, bonus_str: 0, bonus_aur: 0, bonus_int: 0, bonus_dex: 0, bonus_aus: 0, bonus_def: 0, bonus_res: 0, bonus_fame: 0
   });
   const [skillForm, setSkillForm] = useState({
     name: '', type: 'active', description: '', dice_type: 'd6', dice_quantity: 1, attribute_used: 'str', cost: 0
@@ -30,6 +30,20 @@ export const CharacterView: React.FC = () => {
     name: '', description: ''
   });
   const [combatLog, setCombatLog] = useState<string[]>([]);
+  const [expandedSkills, setExpandedSkills] = useState<string[]>([]);
+  const [expandedItems, setExpandedItems] = useState<string[]>([]);
+
+  const toggleSkillExpand = (id: string) => {
+    setExpandedSkills(prev => 
+      prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
+    );
+  };
+
+  const toggleItemExpand = (id: string) => {
+    setExpandedItems(prev => 
+      prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
+    );
+  };
   const [globalItems, setGlobalItems] = useState<any[]>([]);
 
   useEffect(() => {
@@ -144,7 +158,7 @@ export const CharacterView: React.FC = () => {
     });
     setShowItemModal(false);
     setItemForm({
-      name: '', type: 'arma', quantity: 1, bonus_hp: 0, bonus_str: 0, bonus_aur: 0, bonus_int: 0, bonus_dex: 0, bonus_aus: 0, bonus_def: 0, bonus_res: 0, bonus_fame: 0
+      name: '', type: 'arma', quantity: 1, description: '', bonus_hp: 0, bonus_str: 0, bonus_aur: 0, bonus_int: 0, bonus_dex: 0, bonus_aus: 0, bonus_def: 0, bonus_res: 0, bonus_fame: 0
     });
     fetchCharacterData();
   };
@@ -230,6 +244,15 @@ export const CharacterView: React.FC = () => {
     );
     setMasteries(updatedMasteries);
     await supabase.from('masteries').update({ xp: newXp, level: newLevel }).eq('id', mastery.id);
+  };
+
+  const updateMasteryLevel = async (mastery: any, delta: number) => {
+    const newLevel = Math.max(1, (mastery.level || 1) + delta);
+    const updatedMasteries = masteries.map(m => 
+      m.id === mastery.id ? { ...m, level: newLevel } : m
+    );
+    setMasteries(updatedMasteries);
+    await supabase.from('masteries').update({ level: newLevel }).eq('id', mastery.id);
   };
 
   const handleMasteryXpInput = async (mastery: any, value: string) => {
@@ -411,7 +434,11 @@ export const CharacterView: React.FC = () => {
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.5rem' }}>
                         <div>
                           <div style={{ fontWeight: 'bold', color: 'var(--accent)', fontSize: '1.1rem' }}>{m.name}</div>
-                          <div style={{ fontSize: '0.875rem', color: 'var(--secondary)', fontWeight: 'bold' }}>Nível {m.level || 1}</div>
+                          <div style={{ fontSize: '0.875rem', color: 'var(--secondary)', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                            Nível {m.level || 1}
+                            <button className="btn btn-secondary" style={{ padding: '0.1rem 0.25rem', minWidth: 'auto', height: 'auto' }} onClick={() => updateMasteryLevel(m, -1)}><Minus size={12} /></button>
+                            <button className="btn btn-secondary" style={{ padding: '0.1rem 0.25rem', minWidth: 'auto', height: 'auto' }} onClick={() => updateMasteryLevel(m, 1)}><Plus size={12} /></button>
+                          </div>
                         </div>
                         <button onClick={() => setDeleteTarget({ id: m.id, type: 'mastery', name: m.name })} style={{ background: 'transparent', border: 'none', color: '#ff4444', cursor: 'pointer', padding: '0.25rem' }}>
                           <Trash2 size={16} />
@@ -460,24 +487,47 @@ export const CharacterView: React.FC = () => {
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                 {inventory.map(item => (
-                  <div key={item.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.5rem', background: 'rgba(0,0,0,0.2)', borderRadius: '8px', borderLeft: item.is_equipped ? '4px solid var(--accent)' : '4px solid transparent' }}>
-                    <div>
-                      <div style={{ fontWeight: 'bold' }}>{item.name}</div>
-                      <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'capitalize' }}>Tipo: {item.type}</div>
-                    </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', background: 'rgba(255,255,255,0.05)', borderRadius: '4px', padding: '0.1rem' }}>
-                        <button onClick={() => updateInventoryQuantity(item.id, -1)} style={{ background: 'transparent', border: 'none', color: 'white', cursor: 'pointer', padding: '0.2rem' }}><Minus size={12} /></button>
-                        <span style={{ fontSize: '0.75rem', minWidth: '20px', textAlign: 'center' }}>{item.quantity || 1}</span>
-                        <button onClick={() => updateInventoryQuantity(item.id, 1)} style={{ background: 'transparent', border: 'none', color: 'white', cursor: 'pointer', padding: '0.2rem' }}><Plus size={12} /></button>
+                  <div key={item.id} style={{ padding: '0.5rem', background: 'rgba(0,0,0,0.2)', borderRadius: '8px', borderLeft: item.is_equipped ? '4px solid var(--accent)' : '4px solid transparent' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                      <div>
+                        <div style={{ fontWeight: 'bold' }}>{item.name}</div>
+                        <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'capitalize' }}>Tipo: {item.type}</div>
                       </div>
-                      <button className="btn btn-secondary" style={{ padding: '0.25rem 0.5rem', fontSize: '0.75rem' }} onClick={() => toggleEquip(item.id, item.type, item.is_equipped)}>
-                        {item.is_equipped ? 'Desequipar' : 'Equipar'}
-                      </button>
-                      <button onClick={() => setDeleteTarget({ id: item.id, type: 'item', name: item.name })} style={{ background: 'transparent', border: 'none', color: '#ff4444', cursor: 'pointer' }}>
-                        <Trash2 size={16} style={{ pointerEvents: 'none' }} />
-                      </button>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <button 
+                          onClick={() => toggleItemExpand(item.id)} 
+                          style={{ background: 'transparent', border: 'none', color: 'white', cursor: 'pointer', padding: '0.25rem' }}
+                          title="Ver detalhes"
+                        >
+                          <Info size={16} />
+                        </button>
+                        <div style={{ display: 'flex', alignItems: 'center', background: 'rgba(255,255,255,0.05)', borderRadius: '4px', padding: '0.1rem' }}>
+                          <button onClick={() => updateInventoryQuantity(item.id, -1)} style={{ background: 'transparent', border: 'none', color: 'white', cursor: 'pointer', padding: '0.2rem' }}><Minus size={12} /></button>
+                          <span style={{ fontSize: '0.75rem', minWidth: '20px', textAlign: 'center' }}>{item.quantity || 1}</span>
+                          <button onClick={() => updateInventoryQuantity(item.id, 1)} style={{ background: 'transparent', border: 'none', color: 'white', cursor: 'pointer', padding: '0.2rem' }}><Plus size={12} /></button>
+                        </div>
+                        <button className="btn btn-secondary" style={{ padding: '0.25rem 0.5rem', fontSize: '0.75rem' }} onClick={() => toggleEquip(item.id, item.type, item.is_equipped)}>
+                          {item.is_equipped ? 'Desequipar' : 'Equipar'}
+                        </button>
+                        <button onClick={() => setDeleteTarget({ id: item.id, type: 'item', name: item.name })} style={{ background: 'transparent', border: 'none', color: '#ff4444', cursor: 'pointer' }}>
+                          <Trash2 size={16} style={{ pointerEvents: 'none' }} />
+                        </button>
+                      </div>
                     </div>
+                    {expandedItems.includes(item.id) && (
+                      <div style={{ marginTop: '0.5rem', fontSize: '0.875rem', color: 'var(--text-muted)', animation: 'fadeIn 0.2s ease' }}>
+                        {item.description && <p style={{ fontStyle: 'italic', marginBottom: '0.25rem' }}>{item.description}</p>}
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.25rem', fontSize: '0.75rem' }}>
+                          {['hp', 'str', 'aur', 'int', 'dex', 'aus', 'def', 'res', 'fame'].map(stat => {
+                            const val = item[`bonus_${stat}`];
+                            if (val) {
+                              return <span key={stat} style={{ color: 'var(--primary-hover)' }}>{stat.toUpperCase()}: +{val}</span>;
+                            }
+                            return null;
+                          })}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
@@ -510,32 +560,76 @@ export const CharacterView: React.FC = () => {
             {skills.length === 0 ? (
               <p style={{ color: 'var(--text-muted)' }}>Nenhuma habilidade cadastrada.</p>
             ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                {skills.map(skill => (
-                  <div key={skill.id} style={{ padding: '0.75rem', background: 'rgba(255,255,255,0.03)', borderRadius: '8px' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
-                      <div style={{ fontWeight: 'bold', color: skill.type === 'active' ? 'var(--primary-hover)' : 'var(--accent)' }}>{skill.name}</div>
-                      <div style={{ display: 'flex', gap: '0.5rem' }}>
-                        {skill.type === 'active' && (
-                          <button className="btn btn-primary" style={{ padding: '0.25rem 0.5rem', fontSize: '0.75rem' }} onClick={() => rollSkill(skill)}>
-                            <Dices size={14} /> Rolar
-                          </button>
+              <div style={{ display: 'flex', gap: '1.5rem' }} className="flex-mobile-column">
+                {/* Ativas */}
+                <div style={{ flex: 1 }}>
+                  <h4 style={{ color: 'var(--primary-hover)', marginBottom: '0.5rem' }}>Ativas</h4>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                    {skills.filter(s => s.type === 'active').map(skill => (
+                      <div key={skill.id} style={{ padding: '0.5rem', background: 'rgba(255,255,255,0.03)', borderRadius: '8px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <div style={{ fontWeight: 'bold', color: 'var(--primary-hover)' }}>{skill.name}</div>
+                          <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                            <button 
+                              onClick={() => toggleSkillExpand(skill.id)} 
+                              style={{ background: 'transparent', border: 'none', color: 'white', cursor: 'pointer', padding: '0.25rem' }}
+                              title="Ver detalhes"
+                            >
+                              <Menu size={16} />
+                            </button>
+                            <button className="btn btn-primary" style={{ padding: '0.25rem 0.5rem', fontSize: '0.75rem' }} onClick={() => rollSkill(skill)}>
+                              <Dices size={14} />
+                            </button>
+                            <button onClick={() => setDeleteTarget({ id: skill.id, type: 'skill', name: skill.name })} style={{ background: 'transparent', border: 'none', color: '#ff4444', cursor: 'pointer' }}>
+                              <Trash2 size={16} style={{ pointerEvents: 'none' }} />
+                            </button>
+                          </div>
+                        </div>
+                        {expandedSkills.includes(skill.id) && (
+                          <div style={{ marginTop: '0.5rem', animation: 'fadeIn 0.2s ease' }}>
+                            <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)' }}>{skill.description}</p>
+                            <div style={{ display: 'flex', gap: '1rem', marginTop: '0.5rem', fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                              <span>Dado: {skill.dice_quantity}{skill.dice_type}</span>
+                              <span style={{ textTransform: 'uppercase' }}>Atributo: {skill.attribute_used}</span>
+                              <span>Custo: {skill.cost}</span>
+                            </div>
+                          </div>
                         )}
-                        <button onClick={() => setDeleteTarget({ id: skill.id, type: 'skill', name: skill.name })} style={{ background: 'transparent', border: 'none', color: '#ff4444', cursor: 'pointer' }}>
-                          <Trash2 size={16} style={{ pointerEvents: 'none' }} />
-                        </button>
                       </div>
-                    </div>
-                    <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)' }}>{skill.description}</p>
-                    {skill.type === 'active' && (
-                      <div style={{ display: 'flex', gap: '1rem', marginTop: '0.5rem', fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                        <span>Dado: {skill.dice_quantity}{skill.dice_type}</span>
-                        <span style={{ textTransform: 'uppercase' }}>Atributo: {skill.attribute_used}</span>
-                        <span>Custo: {skill.cost}</span>
-                      </div>
-                    )}
+                    ))}
                   </div>
-                ))}
+                </div>
+
+                {/* Passivas */}
+                <div style={{ flex: 1 }}>
+                  <h4 style={{ color: 'var(--accent)', marginBottom: '0.5rem' }}>Passivas</h4>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                    {skills.filter(s => s.type === 'passive').map(skill => (
+                      <div key={skill.id} style={{ padding: '0.5rem', background: 'rgba(255,255,255,0.03)', borderRadius: '8px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <div style={{ fontWeight: 'bold', color: 'var(--accent)' }}>{skill.name}</div>
+                          <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                            <button 
+                              onClick={() => toggleSkillExpand(skill.id)} 
+                              style={{ background: 'transparent', border: 'none', color: 'white', cursor: 'pointer', padding: '0.25rem' }}
+                              title="Ver detalhes"
+                            >
+                              <Menu size={16} />
+                            </button>
+                            <button onClick={() => setDeleteTarget({ id: skill.id, type: 'skill', name: skill.name })} style={{ background: 'transparent', border: 'none', color: '#ff4444', cursor: 'pointer' }}>
+                              <Trash2 size={16} style={{ pointerEvents: 'none' }} />
+                            </button>
+                          </div>
+                        </div>
+                        {expandedSkills.includes(skill.id) && (
+                          <div style={{ marginTop: '0.5rem', animation: 'fadeIn 0.2s ease' }}>
+                            <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)' }}>{skill.description}</p>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
               </div>
             )}
           </div>
@@ -560,6 +654,7 @@ export const CharacterView: React.FC = () => {
                       ...itemForm,
                       name: selected.name,
                       type: selected.type,
+                      description: selected.description || '',
                       bonus_hp: selected.bonus_hp,
                       bonus_str: selected.bonus_str,
                       bonus_aur: selected.bonus_aur,
@@ -581,6 +676,10 @@ export const CharacterView: React.FC = () => {
               <div className="input-group">
                 <label>Nome do Item</label>
                 <input type="text" className="input" value={itemForm.name} onChange={e => setItemForm({...itemForm, name: e.target.value})} required />
+              </div>
+              <div className="input-group">
+                <label>Descrição</label>
+                <textarea className="input" value={itemForm.description} onChange={e => setItemForm({...itemForm, description: e.target.value})} />
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                 <div className="input-group">

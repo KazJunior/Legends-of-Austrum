@@ -10,6 +10,7 @@ import { CharacterView } from './pages/CharacterView';
 import { MonstersList } from './pages/MonstersList';
 import { GlobalInventory } from './pages/GlobalInventory';
 import { Board } from './pages/Board';
+import { Maps } from './pages/Maps';
 
 class ErrorBoundary extends React.Component<{children: React.ReactNode}, {error: any}> {
   constructor(props: any) {
@@ -44,6 +45,7 @@ function App() {
               <Route path="/monsters" element={<MonstersList />} />
               <Route path="/inventory" element={<GlobalInventory />} />
               <Route path="/board" element={<Board />} />
+              <Route path="/maps" element={<Maps />} />
             </Route>
             
             <Route path="*" element={<Navigate to="/" replace />} />

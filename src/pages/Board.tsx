@@ -271,14 +271,14 @@ export const Board: React.FC = () => {
             ×
           </button>
         )}
-        <div style={{ fontWeight: '900', fontSize: '1.1rem', color: textColor }}>{name.substring(0, 3).toUpperCase()}</div>
-        <div style={{ fontSize: '8px', opacity: 0.7, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', width: '100%', textAlign: 'center' }}>{name}</div>
+        <div style={{ fontWeight: '900', fontSize: 'clamp(0.7rem, 2vw, 1.1rem)', color: textColor }}>{name.substring(0, 3).toUpperCase()}</div>
+        <div style={{ fontSize: 'clamp(6px, 1.5vw, 8px)', opacity: 0.7, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', width: '100%', textAlign: 'center' }}>{name}</div>
         {entity.entity_type !== 'obstacle' && (
-          <div style={{ width: '90%', marginTop: 'auto', paddingBottom: '4px' }}>
-            <div className="status-bar-container" style={{ height: '4px', border: 'none', background: 'rgba(0,0,0,0.5)' }}>
+          <div style={{ width: '90%', marginTop: 'auto', paddingBottom: '2px' }}>
+            <div className="status-bar-container" style={{ height: '3px', border: 'none', background: 'rgba(0,0,0,0.5)' }}>
               <div className="status-bar-fill health-fill" style={{ width: `${hpPercent}%` }}></div>
             </div>
-            <div className="status-bar-container" style={{ height: '4px', border: 'none', background: 'rgba(0,0,0,0.5)', marginTop: '1px' }}>
+            <div className="status-bar-container" style={{ height: '3px', border: 'none', background: 'rgba(0,0,0,0.5)', marginTop: '1px' }}>
               <div className="status-bar-fill mana-fill" style={{ width: `${manaPercent}%` }}></div>
             </div>
           </div>
@@ -289,32 +289,32 @@ export const Board: React.FC = () => {
 
   return (
     <div className="container" style={{ maxWidth: '100%' }}>
-      <div className="flex-between" style={{ marginBottom: '1.5rem' }}>
+      <div className="flex-between board-header" style={{ marginBottom: '1.5rem' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
           <h1 className="title-glow">Tabuleiro de Combate</h1>
           {role === 'admin' && <span style={{ background: 'var(--accent)', color: 'black', padding: '0.2rem 0.6rem', borderRadius: '4px', fontSize: '0.75rem', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '0.25rem' }}><ShieldCheck size={14}/> MESTRE</span>}
         </div>
-        <div style={{ color: 'var(--text-muted)', fontSize: '0.875rem', background: 'rgba(0,0,0,0.3)', padding: '0.5rem 1rem', borderRadius: '20px', border: '1px solid var(--border-subtle)' }}>
+        <div className="board-controls" style={{ color: 'var(--text-muted)', fontSize: '0.875rem', background: 'rgba(0,0,0,0.3)', padding: '0.5rem 1rem', borderRadius: '20px', border: '1px solid var(--border-subtle)' }}>
           {movingEntity ? `Movendo: clique adjacente` : 
            attackingEntity ? (selectedSkill ? `Atacando com ${selectedSkill.name}` : 'Selecione habilidade') :
            selectedEntity ? `Colocando ${selectedEntity.name}` : 'Clique em sua unidade para agir'}
         </div>
       </div>
 
-      <div className="responsive-grid" style={{ gridTemplateColumns: '1fr 320px' }}>
-        <div className="glass-panel" style={{ padding: '1rem', overflowX: 'auto', position: 'relative' }}>
-          <div style={{ display: 'inline-grid', gridTemplateColumns: `40px repeat(12, 60px)`, gap: '2px', background: 'var(--border-subtle)', padding: '2px', borderRadius: '8px' }}>
-            <div style={{ height: '40px' }}></div>
-            {cols.map(c => <div key={c} style={{ height: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', color: 'var(--text-muted)' }}>{c}</div>)}
+      <div className="responsive-grid board-layout">
+        <div className="glass-panel board-grid-container" style={{ padding: '1rem', overflowX: 'auto', position: 'relative' }}>
+          <div style={{ display: 'inline-grid', gridTemplateColumns: `var(--header-size) repeat(12, var(--cell-size))`, gap: '2px', background: 'var(--border-subtle)', padding: '2px', borderRadius: '8px' }}>
+            <div style={{ height: 'var(--header-size)' }}></div>
+            {cols.map(c => <div key={c} style={{ height: 'var(--header-size)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', color: 'var(--text-muted)' }}>{c}</div>)}
             {rows.map(r => (
               <React.Fragment key={r}>
-                <div style={{ width: '40px', height: '60px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', color: 'var(--text-muted)' }}>{r}</div>
+                <div style={{ width: 'var(--header-size)', height: 'var(--cell-size)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', color: 'var(--text-muted)' }}>{r}</div>
                 {cols.map(c => {
                   const isMoveTarget = movingEntity && isAdjacent(movingEntity.pos_row, movingEntity.pos_col, r, c);
                   const isAttackTarget = attackingEntity && selectedSkill && isAdjacent(attackingEntity.pos_row, attackingEntity.pos_col, r, c);
                   return (
                     <div key={`${r}${c}`} onClick={() => handleCellClick(r, c)} className="glass-panel board-cell" 
-                      style={{ width: '60px', height: '60px', padding: '0', borderRadius: '4px', cursor: 'pointer',
+                      style={{ width: 'var(--cell-size)', height: 'var(--cell-size)', padding: '0', borderRadius: '4px', cursor: 'pointer',
                         background: isMoveTarget ? 'rgba(34, 197, 94, 0.15)' : (isAttackTarget ? 'rgba(239, 68, 68, 0.15)' : 'rgba(0,0,0,0.2)'),
                         border: isMoveTarget ? '1px dashed #22c55e' : (isAttackTarget ? '1px dashed #ef4444' : '1px solid var(--border-subtle)') }}>
                       {renderCellContent(r, c)}
@@ -326,7 +326,7 @@ export const Board: React.FC = () => {
           </div>
 
           {actionMenuEntity && (
-            <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', zIndex: 100, background: 'var(--bg-panel-solid)', padding: '1.5rem', borderRadius: '12px', border: '2px solid var(--primary)', boxShadow: '0 0 30px rgba(0,0,0,0.8)', textAlign: 'center' }}>
+            <div className="action-menu-popup" style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', zIndex: 100, background: 'var(--bg-panel-solid)', padding: '1.5rem', borderRadius: '12px', border: '2px solid var(--primary)', boxShadow: '0 0 30px rgba(0,0,0,0.8)', textAlign: 'center' }}>
               <h3 style={{ marginBottom: '1rem' }}>Ações de {actionMenuEntity.character?.name || actionMenuEntity.monster?.name}</h3>
               <div style={{ display: 'flex', gap: '1rem' }}>
                 <button className="btn btn-primary" onClick={() => { setMovingEntity(actionMenuEntity); setActionMenuEntity(null); }}>Movimentar</button>
