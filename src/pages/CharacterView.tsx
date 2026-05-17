@@ -222,6 +222,11 @@ export const CharacterView: React.FC = () => {
   };
 
   const updateMasteryXp = async (mastery: any, delta: number) => {
+    if (!mastery.id) {
+      console.error('Mastery ID is missing!', mastery);
+      alert('Erro: ID da maestria está faltando!');
+      return;
+    }
     let newXp = (mastery.xp || 0) + delta;
     let newLevel = mastery.level || 1;
 
@@ -243,19 +248,37 @@ export const CharacterView: React.FC = () => {
       m.id === mastery.id ? { ...m, xp: newXp, level: newLevel } : m
     );
     setMasteries(updatedMasteries);
-    await supabase.from('masteries').update({ xp: newXp, level: newLevel }).eq('id', mastery.id);
+    const { error } = await supabase.from('masteries').update({ xp: newXp, level: newLevel }).eq('id', mastery.id);
+    if (error) {
+      console.error('Error updating mastery XP:', error);
+      alert('Erro ao salvar XP da maestria: ' + error.message);
+    }
   };
 
   const updateMasteryLevel = async (mastery: any, delta: number) => {
+    if (!mastery.id) {
+      console.error('Mastery ID is missing!', mastery);
+      alert('Erro: ID da maestria está faltando!');
+      return;
+    }
     const newLevel = Math.max(1, (mastery.level || 1) + delta);
     const updatedMasteries = masteries.map(m => 
       m.id === mastery.id ? { ...m, level: newLevel } : m
     );
     setMasteries(updatedMasteries);
-    await supabase.from('masteries').update({ level: newLevel }).eq('id', mastery.id);
+    const { error } = await supabase.from('masteries').update({ level: newLevel }).eq('id', mastery.id);
+    if (error) {
+      console.error('Error updating mastery level:', error);
+      alert('Erro ao salvar nível da maestria: ' + error.message);
+    }
   };
 
   const handleMasteryXpInput = async (mastery: any, value: string) => {
+    if (!mastery.id) {
+      console.error('Mastery ID is missing!', mastery);
+      alert('Erro: ID da maestria está faltando!');
+      return;
+    }
     const val = parseInt(value, 10);
     if (isNaN(val)) return;
     
@@ -271,7 +294,11 @@ export const CharacterView: React.FC = () => {
       m.id === mastery.id ? { ...m, xp: newXp, level: newLevel } : m
     );
     setMasteries(updatedMasteries);
-    await supabase.from('masteries').update({ xp: newXp, level: newLevel }).eq('id', mastery.id);
+    const { error } = await supabase.from('masteries').update({ xp: newXp, level: newLevel }).eq('id', mastery.id);
+    if (error) {
+      console.error('Error updating mastery XP input:', error);
+      alert('Erro ao salvar XP da maestria: ' + error.message);
+    }
   };
 
   const handleDeleteMastery = async (masteryId: string) => {
