@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
-import { Dices, Plus, Minus, Trash2, Eraser, X, Zap, Menu, Info } from 'lucide-react';
+import { Dices, Plus, Minus, Trash2, Eraser, X, Zap, Menu, Info, Edit } from 'lucide-react';
 
 export const CharacterView: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -24,8 +24,26 @@ export const CharacterView: React.FC = () => {
     name: '', type: 'arma', quantity: 1, description: '', bonus_hp: 0, bonus_str: 0, bonus_aur: 0, bonus_int: 0, bonus_dex: 0, bonus_aus: 0, bonus_def: 0, bonus_res: 0, bonus_fame: 0
   });
   const [skillForm, setSkillForm] = useState({
-    name: '', type: 'active', description: '', dice_type: 'd6', dice_quantity: 1, attribute_used: 'str', cost: 0
+    name: '', type: 'active', description: '', dice_type: 'd6', dice_quantity: 1, attribute_used: 'str', cost: 0, te: 0, cooldown: 0, range: ''
   });
+  const [editingSkillId, setEditingSkillId] = useState<string | null>(null);
+
+  const handleEditSkill = (skill: any) => {
+    setEditingSkillId(skill.id);
+    setSkillForm({
+      name: skill.name,
+      type: skill.type,
+      description: skill.description || '',
+      dice_type: skill.dice_type || 'd6',
+      dice_quantity: skill.dice_quantity || 1,
+      attribute_used: skill.attribute_used || 'str',
+      cost: skill.cost || 0,
+      te: skill.te || 0,
+      cooldown: skill.cooldown || 0,
+      range: skill.range || ''
+    });
+    setShowSkillModal(true);
+  };
   const [masteryForm, setMasteryForm] = useState({
     name: '', description: ''
   });
@@ -189,13 +207,20 @@ export const CharacterView: React.FC = () => {
 
   const handleAddSkill = async (e: React.FormEvent) => {
     e.preventDefault();
-    await supabase.from('skills').insert({
-      character_id: id,
-      ...skillForm
-    });
+    if (editingSkillId) {
+      await supabase.from('skills').update({
+        ...skillForm
+      }).eq('id', editingSkillId);
+      setEditingSkillId(null);
+    } else {
+      await supabase.from('skills').insert({
+        character_id: id,
+        ...skillForm
+      });
+    }
     setShowSkillModal(false);
     setSkillForm({
-      name: '', type: 'active', description: '', dice_type: 'd6', dice_quantity: 1, attribute_used: 'str', cost: 0
+      name: '', type: 'active', description: '', dice_type: 'd6', dice_quantity: 1, attribute_used: 'str', cost: 0, te: 0, cooldown: 0, range: ''
     });
     fetchCharacterData();
   };
@@ -607,6 +632,13 @@ export const CharacterView: React.FC = () => {
                             <button className="btn btn-primary" style={{ padding: '0.25rem 0.5rem', fontSize: '0.75rem' }} onClick={() => rollSkill(skill)}>
                               <Dices size={14} />
                             </button>
+                            <button 
+                              onClick={() => handleEditSkill(skill)} 
+                              style={{ background: 'transparent', border: 'none', color: 'var(--secondary)', cursor: 'pointer', padding: '0.25rem' }}
+                              title="Editar"
+                            >
+                              <Edit size={16} />
+                            </button>
                             <button onClick={() => setDeleteTarget({ id: skill.id, type: 'skill', name: skill.name })} style={{ background: 'transparent', border: 'none', color: '#ff4444', cursor: 'pointer' }}>
                               <Trash2 size={16} style={{ pointerEvents: 'none' }} />
                             </button>
@@ -615,10 +647,13 @@ export const CharacterView: React.FC = () => {
                         {expandedSkills.includes(skill.id) && (
                           <div style={{ marginTop: '0.5rem', animation: 'fadeIn 0.2s ease' }}>
                             <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)' }}>{skill.description}</p>
-                            <div style={{ display: 'flex', gap: '1rem', marginTop: '0.5rem', fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                            <div style={{ display: 'flex', gap: '1rem', marginTop: '0.5rem', fontSize: '0.75rem', color: 'var(--text-muted)', flexWrap: 'wrap' }}>
                               <span>Dado: {skill.dice_quantity}{skill.dice_type}</span>
                               <span style={{ textTransform: 'uppercase' }}>Atributo: {skill.attribute_used}</span>
                               <span>Custo: {skill.cost}</span>
+                              {skill.te > 0 && <span>TE: {skill.te}</span>}
+                              {skill.cooldown > 0 && <span>CD: {skill.cooldown}</span>}
+                              {skill.range && <span>Alcance: {skill.range}</span>}
                             </div>
                           </div>
                         )}
@@ -642,6 +677,13 @@ export const CharacterView: React.FC = () => {
                               title="Ver detalhes"
                             >
                               <Menu size={16} />
+                            </button>
+                            <button 
+                              onClick={() => handleEditSkill(skill)} 
+                              style={{ background: 'transparent', border: 'none', color: 'var(--secondary)', cursor: 'pointer', padding: '0.25rem' }}
+                              title="Editar"
+                            >
+                              <Edit size={16} />
                             </button>
                             <button onClick={() => setDeleteTarget({ id: skill.id, type: 'skill', name: skill.name })} style={{ background: 'transparent', border: 'none', color: '#ff4444', cursor: 'pointer' }}>
                               <Trash2 size={16} style={{ pointerEvents: 'none' }} />
@@ -744,8 +786,8 @@ export const CharacterView: React.FC = () => {
         <div className="modal-overlay">
           <div className="glass-panel modal-content" style={{ maxWidth: '500px', width: '100%' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-              <h2>Nova Habilidade</h2>
-              <button onClick={() => setShowSkillModal(false)} style={{ background: 'transparent', border: 'none', color: 'white', cursor: 'pointer' }}><X /></button>
+              <h2>{editingSkillId ? 'Editar Habilidade' : 'Nova Habilidade'}</h2>
+              <button onClick={() => { setShowSkillModal(false); setEditingSkillId(null); setSkillForm({ name: '', type: 'active', description: '', dice_type: 'd6', dice_quantity: 1, attribute_used: 'str', cost: 0, te: 0, cooldown: 0, range: '' }); }} style={{ background: 'transparent', border: 'none', color: 'white', cursor: 'pointer' }}><X /></button>
             </div>
             <form onSubmit={handleAddSkill}>
               <div className="input-group">
@@ -789,9 +831,21 @@ export const CharacterView: React.FC = () => {
                     <label>Custo Mana</label>
                     <input type="number" className="input" value={skillForm.cost} onChange={e => setSkillForm({...skillForm, cost: Number(e.target.value)})} />
                   </div>
+                  <div className="input-group">
+                    <label>TE</label>
+                    <input type="number" className="input" value={skillForm.te} onChange={e => setSkillForm({...skillForm, te: Number(e.target.value)})} />
+                  </div>
+                  <div className="input-group">
+                    <label>Cooldown</label>
+                    <input type="number" className="input" value={skillForm.cooldown} onChange={e => setSkillForm({...skillForm, cooldown: Number(e.target.value)})} />
+                  </div>
+                  <div className="input-group">
+                    <label>Alcance</label>
+                    <input type="text" className="input" value={skillForm.range} onChange={e => setSkillForm({...skillForm, range: e.target.value})} placeholder="Ex: 5m, CaC" />
+                  </div>
                 </div>
               )}
-              <button type="submit" className="btn btn-primary" style={{ width: '100%', marginTop: '1rem' }}>Criar Habilidade</button>
+              <button type="submit" className="btn btn-primary" style={{ width: '100%', marginTop: '1rem' }}>{editingSkillId ? 'Salvar Alterações' : 'Criar Habilidade'}</button>
             </form>
           </div>
         </div>
